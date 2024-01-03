@@ -153,38 +153,28 @@
 (blink-cursor-mode 0) ;; Don't blink cursor
 (add-hook 'prog-mode-hook (lambda () (hs-minor-mode t))) ;; Enable folding hide/show globally
 
-(use-package treemacs
-  :ensure t
-  :defer t
-  :bind
-  (("C-c t" . treemacs))
-  :config
-  (setq treemacs-width 50)
-  (setq-local mode-line-format nil))
-  
-(use-package treemacs-evil
-  :after (treemacs evil)
-  :ensure t)
+(use-package ewal)
+(use-package ewal-doom-themes
+  :init
+  (load-theme 'ewal-doom-one t))
 
-(use-package ewal
-  :init (setq ewal-use-built-in-always-p nil
-              ewal-use-built-in-on-failure-p t
-              ewal-built-in-palette "sexy-material"))
-(use-package ewal-spacemacs-themes
-  :init (progn
-          (setq spacemacs-theme-underline-parens t)
-          (show-paren-mode +1)
-          (global-hl-line-mode))
-  :config (progn
-            (load-theme 'ewal-spacemacs-modern t)
-            (enable-theme 'ewal-spacemacs-modern)))
-(use-package ewal-evil-cursors
-  :after (ewal-spacemacs-themes)
-  :config (ewal-evil-cursors-get-colors
-           :apply t :spaceline t))
+(use-package doom-modeline
+  :init
+  (setq doom-modeline-height 40)
+  (setq doom-modeline-buffer-encoding nil)
+  (doom-modeline-mode))
 
 
+(define-minor-mode translucent-mode
+  "Make the current frame slightly transparent."
+  nil
+  :global t
+  (if translucent-mode
+      (set-frame-parameter (selected-frame) 'alpha '(100))
+    (set-frame-parameter (selected-frame) 'alpha '(90))))
 
+
+(set-face-attribute 'default nil :height 140)
 (set-face-attribute 'default nil :font "Maple Mono" :height 140)
 (set-face-attribute 'fixed-pitch nil :font "Maple Mono" :height 140)
 (set-face-attribute 'variable-pitch nil :font "Maple Mono" :height 140)
@@ -196,13 +186,6 @@
 (global-set-key (kbd "<C-wheel-up>") 'text-scale-increase)
 (global-set-key (kbd "<C-wheel-down>") 'text-scale-decrease)
 
-(use-package doom-modeline
-  :init (doom-modeline-mode 1)
-  :config
-  (setq doom-modeline-height 25      ;; Sets modeline height
-        doom-modeline-bar-width 5    ;; Sets right bar width
-        doom-modeline-persp-name t   ;; Adds perspective name to modeline
-        doom-modeline-persp-icon t)) ;; Adds folder icon next to persp name
 
 (use-package dashboard
   :ensure t 
@@ -239,10 +222,6 @@
                          (or (equal major-mode 'vterm-mode)
                              (string-prefix-p vterm-buffer-name (buffer-name buffer))))))
                   (display-buffer-reuse-window display-buffer-at-bottom)
-                  ;;(display-buffer-reuse-window display-buffer-in-direction)
-                  ;;display-buffer-in-direction/direction/dedicated is added in emacs27
-                  ;;(direction . bottom)
-                  ;;(dedicated . t) ;dedicated is supported in emacs27
                   (reusable-frames . visible)
                   (window-height . 0.4))))
 
@@ -251,6 +230,9 @@
   (projectile-mode 1)
   :init
   (setq projectile-switch-project-action #'projectile-dired))
+
+
+
 (use-package lsp-mode
   :init
   (setq lsp-keymap-prefix "C-c C-l")
@@ -259,7 +241,12 @@
           (before-save . lsp-organize-imports)
           (prog-mode . lsp)
     )
-  :commands (lsp lsp-defered)
+  :commands lsp
+  :hook ((c-mode . lsp)
+         (c++-mode . lsp)
+         (python-mode . lsp)
+         (rust-mode . lsp)
+		 )
   :config 
   (setq lsp-enable-snippet t
 		lsp-inlay-hint-enable t
@@ -268,7 +255,10 @@
 
 (use-package lsp-ui
   :after lsp-mode
- :hook (lsp-mode . lsp-ui-mode)
+  :hook (lsp-mode . lsp-ui-mode)
+  :init
+  (add-hook 'flycheck-mode-hook 'lsp-ui-mode) ;; HACK
+  (add-hook 'lsp-mode-hook 'lsp-ui-mode)
   :config
   (setq lsp-ui-doc-enable t
 		lsp-ui-doc-delay 0.2
@@ -276,15 +266,19 @@
 		lsp-ui-doc-show-with-mouse nil
 		lsp-ui-doc-position 'at-point
 		lsp-ui-doc-border "black"
+		flycheck-mode-hook 'lsp-ui-mode
 		lsp-ui-flycheck-enable t))
 
-(use-package flycheck)
+(use-package flycheck   
+  :hook
+  (prog-mode . flycheck-mode)
+)
 
 (use-package yasnippet-snippets
-  :hook (prog-mode . yas-minor-mode))
+  :hook (prog-mode . yas-global-mode))
 
 (use-package nix-mode
-  :hook (nix-mode . lsp-deferred)
+  :hook (nix-mode . lsp)
   :ensure t)
 
 (add-hook 'org-mode-hook 'org-indent-mode) ;; Indent text
