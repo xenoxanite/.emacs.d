@@ -281,6 +281,8 @@
   :hook (nix-mode . lsp)
   :ensure t)
 
+
+
 (use-package leetcode
     :config
    (setq leetcode-prefer-language "cpp")
