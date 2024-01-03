@@ -34,7 +34,7 @@
   :after evil
   :config
   ;; Setting where to use evil-collection
-  (setq evil-collection-mode-list '(dired ibuffer magit corfu dashboard))
+  (setq evil-collection-mode-list '(dired ibuffer corfu dashboard))
   (evil-collection-init))
 ;; Unmap keys in 'evil-maps. If not done, (setq org-return-follows-link t) will not work
 (with-eval-after-load 'evil-maps
@@ -112,10 +112,6 @@
 
 
   (start/leader-keys
-    "g" '(:ignore t :wk "Git")
-    "g g" '(magit-status :wk "Magit status"))
-
-  (start/leader-keys
     "h" '(:ignore t :wk "Help") ;; To get more help use C-h commands
     "h r" '((lambda () (interactive)
               (load-file "~/.emacs.d/init.el"))
@@ -157,10 +153,6 @@
 (blink-cursor-mode 0) ;; Don't blink cursor
 (add-hook 'prog-mode-hook (lambda () (hs-minor-mode t))) ;; Enable folding hide/show globally
 
-;;(use-package gruvbox-theme
-;;  :init
-;;  (load-theme 'gruvbox-dark-medium t)) ;; We need to add t to trust this package
-
 (use-package treemacs
   :ensure t
   :defer t
@@ -174,24 +166,29 @@
   :after (treemacs evil)
   :ensure t)
 
-(use-package ewal)
+(use-package ewal
+  :init (setq ewal-use-built-in-always-p nil
+              ewal-use-built-in-on-failure-p t
+              ewal-built-in-palette "sexy-material"))
 (use-package ewal-spacemacs-themes
-  :init
-  (setq ewal-shade-percent-difference 10)
-  (load-theme 'ewal-spacemacs-modern t))
+  :init (progn
+          (setq spacemacs-theme-underline-parens t)
+          (show-paren-mode +1)
+          (global-hl-line-mode))
+  :config (progn
+            (load-theme 'ewal-spacemacs-modern t)
+            (enable-theme 'ewal-spacemacs-modern)))
+(use-package ewal-evil-cursors
+  :after (ewal-spacemacs-themes)
+  :config (ewal-evil-cursors-get-colors
+           :apply t :spaceline t))
 
-(custom-set-variables
- '(initial-frame-alist (quote ((fullscreen . maximized)))))
 
-(set-face-attribute 'default nil
-                    :font "JetBrainsMono Nerd Font" ;; Set your favorite type of font or download JetBrains Mono
-                    :height 120
-                    :weight 'medium)
-;; This sets the default font on all graphical frames created after restarting Emacs.
-;; Does the same thing as 'set-face-attribute default' above, but emacsclient fonts
-;; are not right unless I also add this method of setting the default font.
 
-(add-to-list 'default-frame-alist '(font . "JetBrainsMono Nerd Font")) ;; Set your favorite font
+(set-face-attribute 'default nil :font "Maple Mono" :height 140)
+(set-face-attribute 'fixed-pitch nil :font "Maple Mono" :height 140)
+(set-face-attribute 'variable-pitch nil :font "Maple Mono" :height 140)
+
 (setq-default line-spacing 0.12)
 
 (global-set-key (kbd "C-=") 'text-scale-increase)
@@ -253,10 +250,7 @@
   :config
   (projectile-mode 1)
   :init
-  (setq projectile-switch-project-action #'projectile-dired)
-  (setq projectile-project-search-path '("~/Code/Study/data-structures/" "~/Code/Study/algorithm/"))) ;; . 1 means only search the first subdirectory level for projects
-;; Use Bookmarks for non git projects
-
+  (setq projectile-switch-project-action #'projectile-dired))
 (use-package lsp-mode
   :init
   (setq lsp-keymap-prefix "C-c C-l")
@@ -266,40 +260,32 @@
           (prog-mode . lsp)
     )
   :commands (lsp lsp-defered)
-  :config
-  (setq lsp-auto-configure t)
-  (setq lsp-auto-guess-root t)
-  (setq lsp-inlay-hint-enable t)
-  (setq lsp-before-save-edits t)
-  (setq lsp-completion-enable t)
-  (setq lsp-enable-indentation t)
-  (setq lsp-enable-on-type-formatting t)
-  (setq lsp-enable-which-key-integration t)
-  (setq lsp-enable-xref t)
-  (setq lsp-headerline-breadcrumb-enable nil)  
-  (setq lsp-modeline-code-actions-enable t)
-  (setq lsp-modeline-code-actions-segments '(count icon name))
-  (setq lsp-modeline-diagnostics-enable t)
-  (setq lsp-prefer-flymake nil)
-  )
+  :config 
+  (setq lsp-enable-snippet t
+		lsp-inlay-hint-enable t
+		lsp-enable-on-type-formatting t
+		lsp-headerline-breadcrumb-enable nil))
 
 (use-package lsp-ui
   :after lsp-mode
-  :bind (:map lsp-mode-map
-              ("M-." . #'lsp-ui-peek-find-definitions)
-              ("M-?" . #'lsp-ui-peek-find-references)
-              ("M-p" . #'lsp-ui-peek-jump-forward))
-  :hook (lsp-mode . lsp-ui-mode)
+ :hook (lsp-mode . lsp-ui-mode)
   :config
-  (setq lsp-ui-flycheck-enable t)
-  (setq lsp-ui-flycheck-live-reporting t)
-  (setq lsp-ui-doc-show-with-cursor t))
+  (setq lsp-ui-doc-enable t
+		lsp-ui-doc-delay 0.2
+		lsp-ui-doc-show-with-cursor t
+		lsp-ui-doc-show-with-mouse nil
+		lsp-ui-doc-position 'at-point
+		lsp-ui-doc-border "black"
+		lsp-ui-flycheck-enable t))
+
+(use-package flycheck)
 
 (use-package yasnippet-snippets
   :hook (prog-mode . yas-minor-mode))
 
 (use-package nix-mode
-  :mode "\\.nix\\'")
+  :hook (nix-mode . lsp-deferred)
+  :ensure t)
 
 (add-hook 'org-mode-hook 'org-indent-mode) ;; Indent text
 
@@ -330,14 +316,6 @@
 
 (use-package nerd-icons-ibuffer
   :hook (ibuffer-mode . nerd-icons-ibuffer-mode))
-
-(use-package magit
-  :commands magit-status)
-
-(use-package diff-hl
-  :hook ((magit-pre-refresh-hook . diff-hl-magit-pre-refresh)
-         (magit-post-refresh-hook . diff-hl-magit-post-refresh))
-  :init (global-diff-hl-mode))
 
 (use-package corfu
   ;; Optional customizations
