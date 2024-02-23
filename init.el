@@ -175,9 +175,9 @@
 
 
 (set-face-attribute 'default nil :height 130)
-(set-face-attribute 'default nil :font "Maple Mono" :height 130)
-(set-face-attribute 'fixed-pitch nil :font "Maple Mono" :height 130)
-(set-face-attribute 'variable-pitch nil :font "Maple Mono" :height 130)
+(set-face-attribute 'default nil :font "JetBrainsMono Nerd Font" :height 130)
+(set-face-attribute 'fixed-pitch nil :font "JetBrainsMono Nerd Font" :height 130)
+(set-face-attribute 'variable-pitch nil :font "JetBrainsMono Nerd Font" :height 130)
 
 (setq-default line-spacing 0.12)
 
@@ -285,7 +285,7 @@
     :config
    (setq leetcode-prefer-language "cpp")
    (setq leetcode-save-solutions t)
-   (setq leetcode-directory "~/Code/leetcode/"))
+   (setq leetcode-directory "~/dev/leetcode/"))
 
 
 (use-package nerd-icons
