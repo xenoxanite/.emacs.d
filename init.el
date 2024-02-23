@@ -121,7 +121,6 @@
   (start/leader-keys
     "t" '(:ignore t :wk "Toggle")
     "t w" '(visual-line-mode :wk "Toggle truncated lines (wrap)")
-    "t v" '(vterm-toggle :wk "Show Eat terminal")
     "t l" '(display-line-numbers-mode :wk "Toggle line numbers")
     "t t" '(treemacs-select-window :wk "Treemacs toggle")))
 
@@ -174,12 +173,12 @@
     (set-frame-parameter (selected-frame) 'alpha '(90))))
 
 
-(set-face-attribute 'default nil :height 130)
-(set-face-attribute 'default nil :font "JetBrainsMono Nerd Font" :height 130)
-(set-face-attribute 'fixed-pitch nil :font "JetBrainsMono Nerd Font" :height 130)
-(set-face-attribute 'variable-pitch nil :font "JetBrainsMono Nerd Font" :height 130)
+(set-face-attribute 'default nil :height 140)
+(set-face-attribute 'default nil :font "JetBrainsMono Nerd Font" :height 140)
+(set-face-attribute 'fixed-pitch nil :font "JetBrainsMono Nerd Font" :height 140)
+(set-face-attribute 'variable-pitch nil :font "JetBrainsMono Nerd Font" :height 140)
 
-(setq-default line-spacing 0.12)
+;; (setq-default line-spacing 1)
 
 (global-set-key (kbd "C-=") 'text-scale-increase)
 (global-set-key (kbd "C--") 'text-scale-decrease)
@@ -195,7 +194,7 @@
   (setq dashboard-set-file-icons t)
   (setq dashboard-banner-logo-title "Emacs Is More Than A Text Editor!")
   ;;(setq dashboard-startup-banner 'logo) ;; use standard emacs logo as banner
-  (setq dashboard-startup-banner "/home/fahim/.emacs.d/assets/logo.jpg")  ;; use custom image as banner
+  (setq dashboard-startup-banner "/home/xenoxanite/.emacs.d/assets/logo.jpg")  ;; use custom image as banner
   (setq dashboard-center-content nil) ;; set to 't' for centered content
   (setq dashboard-items '((recents . 4)
                           (agenda . 4 )
@@ -208,22 +207,7 @@
   :config
   (dashboard-setup-startup-hook)))
 
-(use-package vterm)
 
-(use-package vterm-toggle
-  :after vterm
-  :config
-  (setq vterm-toggle-fullscreen-p nil)
-  (setq vterm-toggle-scope 'project)
-  (add-to-list 'display-buffer-alist
-               '((lambda (buffer-or-name _)
-                     (let ((buffer (get-buffer buffer-or-name)))
-                       (with-current-buffer buffer
-                         (or (equal major-mode 'vterm-mode)
-                             (string-prefix-p vterm-buffer-name (buffer-name buffer))))))
-                  (display-buffer-reuse-window display-buffer-at-bottom)
-                  (reusable-frames . visible)
-                  (window-height . 0.4))))
 
 (use-package projectile
   :config
