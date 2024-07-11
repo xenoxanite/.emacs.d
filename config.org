@@ -38,6 +38,12 @@ You can use my emacs config.
     (add-hook 'prog-mode-hook (lambda () (hs-minor-mode t)))
     (setq inhibit-startup-message t)
     (setq gc-cons-threshold (* 50 1000 1000))
+    (global-auto-revert-mode t) 
+    (setq mouse-wheel-progressive-speed nil)
+    (setq scroll-conservatively 10)
+    (setq scroll-margin 8)
+    (setq custom-file (locate-user-emacs-file "custom-vars.el"))
+    (load custom-file 'noerror 'nomessage)
 #+end_src
 
 ** Enable relative line number 
@@ -50,6 +56,11 @@ You can use my emacs config.
 #+begin_src elisp
     (add-to-list 'default-frame-alist
                  '(font . "JetBrains Mono Nerd Font-16"))
+    
+    (set-face-attribute 'default nil :height 160)
+    (set-face-attribute 'default nil :font "JetBrainsMono Nerd Font" :height 160)
+    (set-face-attribute 'fixed-pitch nil :font "JetBrainsMono Nerd Font" :height 160)
+    (set-face-attribute 'variable-pitch nil :font "JetBrainsMono Nerd Font" :height 160)
 #+end_src
 
 ** Add keybind for change text scale
@@ -384,4 +395,196 @@ You can use my emacs config.
              (treemacs-mode . hide-mode-line-mode)))
 
     (setq warning-suppress-log-types '(warning-suppress-types (unlock-file)))
+#+end_src
+
+** Install & setup Projectile
+#+begin_src elisp
+    (use-package projectile
+      :config
+      (projectile-mode 1)
+      :init
+      (setq projectile-switch-project-action #'projectile-dired))
+#+end_src
+
+
+** Install & Setup Vterm
+#+begin_src elisp
+    (use-package vterm
+      :ensure t
+      :defer
+      :custom
+      (vterm-max-scrollback 100000))
+
+    (use-package vterm-toggle
+      :ensure t
+      :custom
+      (vterm-toggle-scope 'project)
+      (vterm-toggle-project-root t)
+      (vterm-toggle-reset-window-configration-after-exit t)
+      (vterm-toggle-hide-method 'reset-window-configration))
+#+end_src
+
+** Install & setup lsp-mode
+#+begin_src elisp
+    (use-package lsp-mode
+      :init
+      (setq lsp-keymap-prefix "C-c C-l")
+      :hook (
+              (before-save . lsp-format-buffer)
+              (before-save . lsp-organize-imports)
+              (prog-mode . lsp)
+        )
+      :commands lsp
+      :hook ((c-mode . lsp)
+             (c++-mode . lsp)
+             (python-mode . lsp)
+             (rust-mode . lsp)
+             )
+      :config 
+      (setq lsp-enable-snippet t
+            lsp-inlay-hint-enable t
+            lsp-enable-on-type-formatting t
+            lsp-headerline-breadcrumb-enable nil))
+#+end_src
+
+** Install & setup lsp-ui & flycheck
+#+begin_src elisp
+    (use-package lsp-ui
+      :after lsp-mode
+      :hook (lsp-mode . lsp-ui-mode)
+      :init
+      (add-hook 'flycheck-mode-hook 'lsp-ui-mode) ;; HACK
+      (add-hook 'lsp-mode-hook 'lsp-ui-mode)
+      :config
+      (setq lsp-ui-doc-enable t
+            lsp-ui-doc-delay 1
+            lsp-ui-doc-show-with-cursor t 
+            lsp-ui-doc--prev-frame nil
+            lsp-ui-doc-show-with-mouse nil
+            lsp-ui-doc-position 'at-point
+            lsp-ui-doc-border nil
+            flycheck-mode-hook 'lsp-ui-mode
+            lsp-ui-flycheck-enable t))
+
+    (use-package flycheck   
+      :hook
+      (prog-mode . flycheck-mode)
+    )
+#+end_src
+
+** Bind key for toggle focus between lsp-ui-doc
+#+begin_src elisp
+    (evil-define-key 'normal 'lsp-ui-doc-frame-mode
+          [?K] #'lsp-ui-doc-unfocus-frame)
+    (evil-normalize-keymaps)
+
+    (evil-define-key 'normal 'lsp-ui-doc-mode
+          [?K] #'lsp-ui-doc-focus-frame)
+    (global-set-key (kbd "C-s") 'save-buffer)
+#+end_src
+
+** Install yasnippet
+#+begin_src elisp
+    (use-package yasnippet-snippets
+      :hook (prog-mode . yas-global-mode))
+#+end_src
+
+** Add autocompletion using company
+#+begin_src elisp
+    (use-package company
+  :after lsp-mode
+  :hook (lsp-mode . company-mode)
+  :bind (:map company-active-map
+         ("<tab>" . company-complete-selection))
+        (:map lsp-mode-map
+         ("<tab>" . company-indent-or-complete-common))
+  :custom
+  (company-minimum-prefix-length 1)
+  (company-idle-delay 0.0))
+
+(use-package company-box
+  :hook (company-mode . company-box-mode))
+#+end_src
+
+** Transparency Effect
+#+begin_src elisp
+;; (define-minor-mode translucent-mode
+;;   "Make the current frame slightly transparent."
+;;   nil
+;;   :global t
+;;   (if translucent-mode
+;;       (set-frame-parameter (selected-frame) 'alpha '(98))
+;;     (set-frame-parameter (selected-frame) 'alpha '(98))))
+
+;; (translucent-mode)
+#+end_src
+
+** Custom function for moving buffer
+#+begin_src elisp
+    ;;;###autoload
+    (defun buf-move-up ()
+      "Swap the current buffer and the buffer above the split.
+    If there is no split, ie now window above the current one, an
+    error is signaled."
+    ;;  "Switches between the current buffer, and the buffer above the
+    ;;  split, if possible."
+      (interactive)
+      (let* ((other-win (windmove-find-other-window 'up))
+         (buf-this-buf (window-buffer (selected-window))))
+        (if (null other-win)
+            (error "No window above this one")
+          ;; swap top with this one
+          (set-window-buffer (selected-window) (window-buffer other-win))
+          ;; move this one to top
+          (set-window-buffer other-win buf-this-buf)
+          (select-window other-win))))
+
+    ;;;###autoload
+    (defun buf-move-down ()
+    "Swap the current buffer and the buffer under the split.
+    If there is no split, ie now window under the current one, an
+    error is signaled."
+      (interactive)
+      (let* ((other-win (windmove-find-other-window 'down))
+         (buf-this-buf (window-buffer (selected-window))))
+        (if (or (null other-win) 
+                (string-match "^ \\*Minibuf" (buffer-name (window-buffer other-win))))
+            (error "No window under this one")
+          ;; swap top with this one
+          (set-window-buffer (selected-window) (window-buffer other-win))
+          ;; move this one to top
+          (set-window-buffer other-win buf-this-buf)
+          (select-window other-win))))
+
+    ;;;###autoload
+    (defun buf-move-left ()
+    "Swap the current buffer and the buffer on the left of the split.
+    If there is no split, ie now window on the left of the current
+    one, an error is signaled."
+      (interactive)
+      (let* ((other-win (windmove-find-other-window 'left))
+         (buf-this-buf (window-buffer (selected-window))))
+        (if (null other-win)
+            (error "No left split")
+          ;; swap top with this one
+          (set-window-buffer (selected-window) (window-buffer other-win))
+          ;; move this one to top
+          (set-window-buffer other-win buf-this-buf)
+          (select-window other-win))))
+
+    ;;;###autoload
+    (defun buf-move-right ()
+    "Swap the current buffer and the buffer on the right of the split.
+    If there is no split, ie now window on the right of the current
+    one, an error is signaled."
+      (interactive)
+      (let* ((other-win (windmove-find-other-window 'right))
+         (buf-this-buf (window-buffer (selected-window))))
+        (if (null other-win)
+            (error "No right split")
+          ;; swap top with this one
+          (set-window-buffer (selected-window) (window-buffer other-win))
+          ;; move this one to top
+          (set-window-buffer other-win buf-this-buf)
+          (select-window other-win))))
 #+end_src
