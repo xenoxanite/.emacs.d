@@ -172,27 +172,37 @@ You can use my emacs config.
 
 ** Install & Initialize Evil mode 
 #+begin_src elisp
+    ;;; UNDO
+    ;; Vim style undo not needed for emacs 28
+    (use-package undo-fu)
+
+    ;;; Vim Bindings
     (use-package evil
-      :init ;; Tweak evil's configuration before loading it
-      (setq evil-want-keybinding nil) ;; Disable evil bindings in other modes (It's not consistent and not good)
-      (setq evil-want-C-u-scroll t) ;; Set  C-u to scrool up
-      (setq evil-want-C-i-jump nil) ;; Disables C-i jump
-      (setq evil-undo-system 'undo-redo) ;; C-r to redo
-      (setq org-return-follows-link  t) ;; Sets RETURN key in org-mode to follow links
-      (evil-mode)
+      :demand t
+      :bind (("<escape>" . keyboard-escape-quit))
+      :init
+      ;; allows for using cgn
+      ;; (setq evil-search-module 'evil-search)
+      (setq evil-want-keybinding nil)
+      ;; no vim insert bindings
+      (setq evil-undo-system 'undo-fu)
       :config
-      (evil-set-initial-state 'eat-mode 'insert)) ;; Set initial state in eat terminal to insert mode
+      (evil-mode 1))
+
+    ;;; Vim Bindings Everywhere else
     (use-package evil-collection
       :after evil
       :config
-      ;; Setting where to use evil-collection
-      (setq evil-collection-mode-list '(dired ibuffer corfu))
+      (setq evil-want-integration t)
       (evil-collection-init))
-    ;; Unmap keys in 'evil-maps. If not done, (setq org-return-follows-link t) will not work
+        ;; Unmap keys in 'evil-maps. If not done, (setq org-return-follows-link t) will not work
     (with-eval-after-load 'evil-maps
-      (define-key evil-motion-state-map (kbd "SPC") nil)
-      (define-key evil-motion-state-map (kbd "RET") nil)
-      (define-key evil-motion-state-map (kbd "TAB") nil))
+        (define-key evil-motion-state-map (kbd "SPC") nil)
+        (define-key evil-motion-state-map (kbd "RET") nil)
+        (define-key evil-motion-state-map (kbd "TAB") nil))
+
+    (setq evil-default-state 'normal)
+
 #+end_src
 
 ** Install & Bind key using general 
@@ -210,7 +220,7 @@ You can use my emacs config.
 
 #+begin_src elisp
       (start/leader-keys
-        "." '(find-file :wk "Find file")
+        "." '(counsel-find-file :wk "Find file")
         "s" '(save-buffer :wk "save buffer")
         "SPC" '(counsel-M-x :wk "Counsel M-x")
         "TAB" '(comment-line :wk "Comment lines")
@@ -220,7 +230,7 @@ You can use my emacs config.
 #+begin_src elisp
       (start/leader-keys
         "f" '(:ignore t :wk "Find")
-        "f c" '((lambda () (interactive) (find-file "~/.config/emacs/config.org")) :wk "Edit emacs config")
+        "f c" '((lambda () (interactive) (find-file "~/.emacs.d/config.org")) :wk "Edit emacs config")
         "f r" '(counsel-recentf :wk "Recent files"))
 #+end_src
 
@@ -233,7 +243,8 @@ You can use my emacs config.
         "b n" '(next-buffer :wk "Next buffer")
         "b p" '(previous-buffer :wk "Previous buffer")
         "b r" '(revert-buffer :wk "Reload buffer")
-        "b j" '(bookmark-jump :wk "Bookmark jump"))
+        "b j" '(bookmark-jump :wk "Bookmark jump")
+        "b c" '(tab-bar-new-tab :Wk "New tab"))
 #+end_src
 
 #+begin_src elisp
@@ -294,6 +305,7 @@ You can use my emacs config.
 
     (use-package ewal-doom-themes)
     (use-package ef-themes)
+    (use-package catppuccin-theme)
 #+end_src
 
 ** Remeber last theme
@@ -311,6 +323,19 @@ You can use my emacs config.
       (setq doom-modeline-height 40)
       (setq doom-modeline-buffer-encoding nil)
       (doom-modeline-mode))
+#+end_src 
+
+** Tab-bar
+#+begin_src elisp
+    (use-package tab-bar
+      :bind (:map tab-prefix-map ("p" . my/new-project-tab))
+      :init
+      (defun my/new-project-tab ()
+        (interactive)
+        (other-tab-prefix)
+        (projectile-switch-project)
+        (tab-rename (projectile-project-name))))
+    (tab-bar-mode)
 #+end_src
 
 ** Install & set-up which key 
@@ -365,6 +390,9 @@ You can use my emacs config.
 #+begin_src elisp
     (use-package org
       :config
+      (setq org-agenda-start-with-log-mode t)
+      (setq org-log-done 'time)
+      (setq org-log-into-drawer t)
       (setq org-ellipsis "..."
             org-hide-emphasis-markers t
             org-agenda-files (append
@@ -382,6 +410,75 @@ You can use my emacs config.
           (org-babel-tangle))))
 
     (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
+
+    (setq org-todo-keywords
+          '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d!)")
+            (sequence "BACKLOG(b)" "PLAN(p)" "READY(r)" "ACTIVE(a)" "REVIEW(v)" "WAIT(w@/!)" "HOLD(h)" "|" "COMPLETED(c)" "CANC(k@)")))
+
+    ;; Configure custom agenda views
+    (setq org-agenda-custom-commands
+    '(("d" "Dashboard"
+        ((agenda "" ((org-deadline-warning-days 7)))
+        (todo "NEXT"
+        ((org-agenda-overriding-header "Next Tasks")))
+        (tags-todo "agenda/ACTIVE" ((org-agenda-overriding-header "Active Projects")))))
+
+    ("n" "Next Tasks"
+        ((todo "NEXT"
+        ((org-agenda-overriding-header "Next Tasks")))))
+
+    ("W" "Work Tasks" tags-todo "+work-email")
+
+    ;; Low-effort next actions
+    ("e" tags-todo "+TODO=\"NEXT\"+Effort<15&+Effort>0"
+        ((org-agenda-overriding-header "Low Effort Tasks")
+        (org-agenda-max-todos 20)
+        (org-agenda-files org-agenda-files)))
+
+    ("w" "Workflow Status"
+        ((todo "WAIT"
+            ((org-agenda-overriding-header "Waiting on External")
+                (org-agenda-files org-agenda-files)))
+        (todo "REVIEW"
+            ((org-agenda-overriding-header "In Review")
+                (org-agenda-files org-agenda-files)))
+        (todo "PLAN"
+            ((org-agenda-overriding-header "In Planning")
+                (org-agenda-todo-list-sublevels nil)
+                (org-agenda-files org-agenda-files)))
+        (todo "BACKLOG"
+            ((org-agenda-overriding-header "Project Backlog")
+                (org-agenda-todo-list-sublevels nil)
+                (org-agenda-files org-agenda-files)))
+        (todo "READY"
+            ((org-agenda-overriding-header "Ready for Work")
+                (org-agenda-files org-agenda-files)))
+        (todo "ACTIVE"
+            ((org-agenda-overriding-header "Active Projects")
+                (org-agenda-files org-agenda-files)))
+        (todo "COMPLETED"
+            ((org-agenda-overriding-header "Completed Projects")
+                (org-agenda-files org-agenda-files)))
+        (todo "CANC"
+            ((org-agenda-overriding-header "Cancelled Projects")
+                (org-agenda-files org-agenda-files)))))))
+
+    (setq org-tag-alist
+          '((:startgroup)
+                                            ; Put mutually exclusive tags here
+            (:endgroup)
+            ("@errand" . ?E)
+            ("@home" . ?h)
+            ("@work" . ?w)
+            ("agenda" . ?a)
+            ("planning" . ?p)
+            ("publish" . ?P)
+            ("batch" . ?b)
+            ("note" . ?n)
+            ("idea" . ?i)))
+    (require 'org-habit)
+    (add-to-list 'org-modules 'org-habit)
+    (setq org-habit-graph-column 60)
 #+end_src
 
 ** Hide modeline on special cases
@@ -438,13 +535,20 @@ You can use my emacs config.
       :hook ((c-mode . lsp)
              (c++-mode . lsp)
              (python-mode . lsp)
-             (rust-mode . lsp)
              )
       :config 
       (setq lsp-enable-snippet t
             lsp-inlay-hint-enable t
             lsp-enable-on-type-formatting t
             lsp-headerline-breadcrumb-enable nil))
+#+end_src
+
+** Rust-mode
+#+begin_src elisp
+    (use-package rust-mode)
+    (autoload 'rust-mode "rust-mode" nil t)
+    (add-to-list 'auto-mode-alist '("\\.rs\\'" . rust-mode))
+    (setq rust-format-on-save t)
 #+end_src
 
 ** Install & setup lsp-ui & flycheck
@@ -508,15 +612,8 @@ You can use my emacs config.
 
 ** Transparency Effect
 #+begin_src elisp
-;; (define-minor-mode translucent-mode
-;;   "Make the current frame slightly transparent."
-;;   nil
-;;   :global t
-;;   (if translucent-mode
-;;       (set-frame-parameter (selected-frame) 'alpha '(98))
-;;     (set-frame-parameter (selected-frame) 'alpha '(98))))
-
-;; (translucent-mode)
+(set-frame-parameter nil 'alpha-background 96)
+(add-to-list 'default-frame-alist '(alpha-background . 96))
 #+end_src
 
 ** Custom function for moving buffer
