@@ -15,4 +15,28 @@ You can use my emacs config.
 - =git clone https://github.com/xenoxanite/.emacs.d.git ~/.emacs.d=
 - Open emacs
 
-*   
+* Configuration
+** Disable scrollbar, toolbar, menubar, tooltips, cursor-blinking
+#+begin_src elisp
+    (scroll-bar-mode -1)        
+    (tool-bar-mode -1)          
+    (tooltip-mode -1)           
+    (menu-bar-mode -1)            
+    (blink-cursor-mode 0) 
+#+end_src
+
+** Make emacs default behaviour better.
+#+begin_src elisp
+    (set-fringe-mode 20)     
+    (delete-selection-mode 1)
+    (electric-pair-mode 1) 
+    (global-visual-line-mode t)
+    (defalias 'yes-or-no-p 'y-or-n-p)
+    (setq make-backup-files nil)
+    (setq org-edit-src-content-indentation 4)
+    (setq-default tab-width 4)
+    (global-set-key [escape] 'keyboard-escape-quit)
+    (add-hook 'prog-mode-hook (lambda () (hs-minor-mode t)))
+    (setq inhibit-startup-message t)
+    (setq gc-cons-threshold (* 50 1000 1000))
+#+end_src
