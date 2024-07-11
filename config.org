@@ -1,0 +1,18 @@
+#+TITLE: Xenoxanite's Emacs Config
+#+AUTHOR: Samiul Basir Fahim
+
+* Introduction
+This is my emacs configuration. Some people may ask why I'm writing it under Org mode ?
+/its Organized/.
+
+*Author*: [[https://facebook.com/samiulbasirfahim][Samiul Basir Fahim]]
+*Created*: 2024-07-11
+*License*: [[./LICENSE][GNU General Public License (GPL)]]
+
+* Installation
+You can use my emacs config.
+- Backup your current emacs config
+- =git clone https://github.com/xenoxanite/.emacs.d.git ~/.emacs.d=
+- Open emacs
+
+*   
