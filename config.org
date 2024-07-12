@@ -108,7 +108,7 @@ You can use my emacs config.
     (use-package swiper)
     (use-package ivy
       :diminish
-      :bind (("C-S-s" . swiper)
+      :bind (("C-S" . swiper)
              :map ivy-minibuffer-map
              ("TAB" . ivy-alt-done)	
              ("C-l" . ivy-alt-done)
@@ -235,16 +235,17 @@ You can use my emacs config.
 #+end_src
 
 #+begin_src elisp
-      (start/leader-keys
-        "b" '(:ignore t :wk "Buffer Bookmarks")
-        "b b" '(counsel-switch-buffer :wk "Switch buffer")
-        "b k" '(kill-this-buffer :wk "Kill this buffer")
-        "b i" '(counsel-ibuffer :wk "Ibuffer")
-        "b n" '(next-buffer :wk "Next buffer")
-        "b p" '(previous-buffer :wk "Previous buffer")
-        "b r" '(revert-buffer :wk "Reload buffer")
-        "b j" '(bookmark-jump :wk "Bookmark jump")
-        "b c" '(tab-bar-new-tab :Wk "New tab"))
+    (start/leader-keys
+      "b" '(:ignore t :wk "Buffer Bookmarks")
+      "b b" '(counsel-switch-buffer :wk "Switch buffer")
+      "b k" '(kill-this-buffer :wk "Kill this buffer")
+      "b i" '(counsel-ibuffer :wk "Ibuffer")
+      "b p" '(centaur-tabs-backward-tab :wk "Previous tab")
+      "b n" '(centaur-tabs-forward-tab :wk "Next tab")
+      "b N" '(next-buffer :wk "Next buffer")
+      "b P" '(previous-buffer :wk "Previous buffer")
+      "b r" '(revert-buffer :wk "Reload buffer")
+      "b j" '(bookmark-jump :wk "Bookmark jump"))
 #+end_src
 
 #+begin_src elisp
@@ -323,19 +324,27 @@ You can use my emacs config.
       (setq doom-modeline-height 40)
       (setq doom-modeline-buffer-encoding nil)
       (doom-modeline-mode))
-#+end_src 
+#+end_src
+
+** Dashboard
+#+begin_src elisp
+    (use-package dashboard
+      :ensure t
+      :config
+      (dashboard-setup-startup-hook))
+    (setq dashboard-items '((recents   . 3)
+                            (bookmarks . 3)
+                            (agenda    . 3)))
+    (setq dashboard-startup-banner "~/.emacs.d/avatar.png")
+    (setq initial-buffer-choice (lambda () (get-buffer-create dashboard-buffer-name)))
+#+end_src
 
 ** Tab-bar
 #+begin_src elisp
-    (use-package tab-bar
-      :bind (:map tab-prefix-map ("p" . my/new-project-tab))
-      :init
-      (defun my/new-project-tab ()
-        (interactive)
-        (other-tab-prefix)
-        (projectile-switch-project)
-        (tab-rename (projectile-project-name))))
-    (tab-bar-mode)
+    (use-package centaur-tabs
+      :demand
+      :config
+      (centaur-tabs-mode t))
 #+end_src
 
 ** Install & set-up which key 
@@ -366,12 +375,10 @@ You can use my emacs config.
     (use-package treemacs
       :ensure t
       :defer t
-      :bind
-      (("C-c t" . treemacs))
       :config
       (setq treemacs-width 30)
-      (setq treemacs-toggle-show-dotfiles nil)
       (setq-local mode-line-format nil))
+    (treemacs-project-follow-mode)
 #+end_src
 
 ** Install & set-up Highlight indented line
@@ -496,11 +503,18 @@ You can use my emacs config.
 
 ** Install & setup Projectile
 #+begin_src elisp
-    (use-package projectile
-      :config
-      (projectile-mode 1)
-      :init
-      (setq projectile-switch-project-action #'projectile-dired))
+(use-package projectile
+  :diminish projectile-mode
+  :config (projectile-mode)
+  :custom ((projectile-completion-system 'ivy))
+  :init
+  ;; NOTE: Set this to the folder where you keep your Git repos!
+  (when (file-directory-p "~/dev")
+    (setq projectile-project-search-path '("~/dev")))
+  (setq projectile-switch-project-action #'projectile-dired))
+
+(use-package counsel-projectile
+  :config (counsel-projectile-mode))
 #+end_src
 
 
@@ -684,4 +698,22 @@ You can use my emacs config.
           ;; move this one to top
           (set-window-buffer other-win buf-this-buf)
           (select-window other-win))))
+#+end_src
+
+** Function for kill all buffer
+#+begin_src elisp
+        (defun nuke-all-buffers ()
+          (interactive)
+          (mapcar 'kill-buffer (buffer-list))
+          (delete-other-windows)
+          (dashboard-open))
+
+        (global-set-key (kbd "C-x K") 'nuke-all-buffers)
+#+end_src
+
+** Magin & Evil Magit for manage git
+#+begin_src elisp
+(use-package magit
+  :custom
+  (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
 #+end_src
