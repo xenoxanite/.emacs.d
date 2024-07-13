@@ -108,7 +108,7 @@ You can use my emacs config.
     (use-package swiper)
     (use-package ivy
       :diminish
-      :bind (("C-S" . swiper)
+      :bind (("M-s" . swiper)
              :map ivy-minibuffer-map
              ("TAB" . ivy-alt-done)	
              ("C-l" . ivy-alt-done)
@@ -402,6 +402,7 @@ You can use my emacs config.
       (setq org-log-into-drawer t)
       (setq org-ellipsis "..."
             org-hide-emphasis-markers t
+            org-hide-leading-stars t
             org-agenda-files (append
                               (file-expand-wildcards "~/notes/*.org")))
       :hook (org-mode . org-indent-mode))
@@ -538,44 +539,55 @@ You can use my emacs config.
 ** Install & setup lsp-mode
 #+begin_src elisp
     (use-package lsp-mode
-      :init
+      :config
       (setq lsp-keymap-prefix "C-c C-l")
+      (setq lsp-enable-snippet t)
+      (setq lsp-inlay-hint-enable t)
+      (setq lsp-completion-enable t)
+      (setq lsp-enable-on-type-formatting t)
+      ;; (setq lsp-modeline-code-actions-enable nil)
+      ;; (setq lsp-modeline-diagnostics-enable nil)
+      ;; (setq lsp-modeline-workspace-status-enable nil)
+      ;; (setq lsp-headerline-breadcrumb-enable nil)
+
       :hook (
-              (before-save . lsp-format-buffer)
-              (before-save . lsp-organize-imports)
-              (prog-mode . lsp)
-        )
-      :commands lsp
-      :hook ((c-mode . lsp)
-             (c++-mode . lsp)
-             (python-mode . lsp)
-             )
-      :config 
-      (setq lsp-enable-snippet t
-            lsp-inlay-hint-enable t
-            lsp-enable-on-type-formatting t
-            lsp-headerline-breadcrumb-enable nil))
+             (before-save . lsp-format-buffer)
+             (before-save . lsp-organize-imports)
+             (prog-mode . lsp)
+             (rust-mode . lsp)
+             (svelte-mode . lsp)
+             (typescript-mode . lsp)
+             (lsp-mode . lsp-enable-which-key-integration))
+      :commands lsp)
 #+end_src
 
-** Rust-mode
+** Lsp
 #+begin_src elisp
-    (use-package rust-mode)
-    (autoload 'rust-mode "rust-mode" nil t)
-    (add-to-list 'auto-mode-alist '("\\.rs\\'" . rust-mode))
-    (setq rust-format-on-save t)
+(use-package rust-mode
+  :mode ("\\.rs\\'" . rust-mode))
+
+(use-package svelte-mode
+  :mode ("\\.svelte\\'" . svelte-mode))
+
+(use-package lsp-tailwindcss
+  :init
+  (setq lsp-tailwindcss-add-on-mode t))
+
+(use-package typescript-mode
+  :mode ("\\.tsx?\\'" . typescript-mode))
 #+end_src
 
 ** Install & setup lsp-ui & flycheck
 #+begin_src elisp
     (use-package lsp-ui
-      :after lsp-mode
-      :hook (lsp-mode . lsp-ui-mode)
-      :init
-      (add-hook 'flycheck-mode-hook 'lsp-ui-mode) ;; HACK
-      (add-hook 'lsp-mode-hook 'lsp-ui-mode)
-      :config
-      (setq lsp-ui-doc-enable t
-            lsp-ui-doc-delay 1
+        :after lsp-mode
+        :hook (lsp-mode . lsp-ui-mode)
+        :init
+        (add-hook 'flycheck-mode-hook 'lsp-ui-mode) ;; HACK
+        (add-hook 'lsp-mode-hook 'lsp-ui-mode)
+        :config
+        (setq lsp-ui-doc-enable t
+            lsp-ui-doc-delay 1.5
             lsp-ui-doc-show-with-cursor t 
             lsp-ui-doc--prev-frame nil
             lsp-ui-doc-show-with-mouse nil
@@ -584,10 +596,20 @@ You can use my emacs config.
             flycheck-mode-hook 'lsp-ui-mode
             lsp-ui-flycheck-enable t))
 
-    (use-package flycheck   
-      :hook
-      (prog-mode . flycheck-mode)
-    )
+    ;; In-buffer checking
+    (use-package flycheck
+      :config
+      (add-hook 'after-init-hook #'global-flycheck-mode))
+
+    (use-package flycheck-inline
+      :config
+      (with-eval-after-load 'flycheck
+        (add-hook 'flycheck-mode-hook #'flycheck-inline-mode)))
+
+    (use-package tree-sitter
+      :config
+      (global-tree-sitter-mode))
+    (use-package tree-sitter-langs)
 #+end_src
 
 ** Bind key for toggle focus between lsp-ui-doc
