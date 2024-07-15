@@ -55,12 +55,12 @@ You can use my emacs config.
 ** Enable custom ui font
 #+begin_src elisp
     (add-to-list 'default-frame-alist
-                 '(font . "JetBrains Mono Nerd Font-16"))
+                 '(font . "JetBrains Mono Nerd Font-18"))
     
-    (set-face-attribute 'default nil :height 160)
-    (set-face-attribute 'default nil :font "JetBrainsMono Nerd Font" :height 160)
-    (set-face-attribute 'fixed-pitch nil :font "JetBrainsMono Nerd Font" :height 160)
-    (set-face-attribute 'variable-pitch nil :font "JetBrainsMono Nerd Font" :height 160)
+    (set-face-attribute 'default nil :height 180)
+    (set-face-attribute 'default nil :font "JetBrainsMono Nerd Font" :height 180)
+    (set-face-attribute 'fixed-pitch nil :font "JetBrainsMono Nerd Font" :height 180)
+    (set-face-attribute 'variable-pitch nil :font "JetBrainsMono Nerd Font" :height 180)
 #+end_src
 
 ** Add keybind for change text scale
@@ -180,6 +180,7 @@ You can use my emacs config.
     (use-package evil
       :demand t
       :bind (("<escape>" . keyboard-escape-quit))
+
       :init
       ;; allows for using cgn
       ;; (setq evil-search-module 'evil-search)
@@ -400,7 +401,7 @@ You can use my emacs config.
       (setq org-agenda-start-with-log-mode t)
       (setq org-log-done 'time)
       (setq org-log-into-drawer t)
-      (setq org-ellipsis "..."
+      (setq org-ellipsis ""
             org-hide-emphasis-markers t
             org-hide-leading-stars t
             org-agenda-files (append
@@ -410,7 +411,8 @@ You can use my emacs config.
     (use-package org-bullets
       :hook (org-mode . org-bullets-mode))
 
-    (defun efs/org-babel-tangle-config ()
+    (defun 
+        efs/org-babel-tangle-config ()
       "Automatically tangle our Emacs.org config file when we save it. Credit to Emacs From Scratch for this one!"
       (when (string-equal (file-name-directory (buffer-file-name))
                           (expand-file-name user-emacs-directory))
@@ -473,7 +475,6 @@ You can use my emacs config.
 
     (setq org-tag-alist
           '((:startgroup)
-                                            ; Put mutually exclusive tags here
             (:endgroup)
             ("@errand" . ?E)
             ("@home" . ?h)
@@ -577,7 +578,7 @@ You can use my emacs config.
   :mode ("\\.tsx?\\'" . typescript-mode))
 #+end_src
 
-** Install & setup lsp-ui & flycheck
+** Install & setup lsp-ui
 #+begin_src elisp
     (use-package lsp-ui
         :after lsp-mode
@@ -595,7 +596,10 @@ You can use my emacs config.
             lsp-ui-doc-border nil
             flycheck-mode-hook 'lsp-ui-mode
             lsp-ui-flycheck-enable t))
+#+end_src
 
+** Install & setup Flycheck
+#+begin_src elisp
     ;; In-buffer checking
     (use-package flycheck
       :config
@@ -631,19 +635,19 @@ You can use my emacs config.
 
 ** Add autocompletion using company
 #+begin_src elisp
-    (use-package company
-  :after lsp-mode
-  :hook (lsp-mode . company-mode)
-  :bind (:map company-active-map
-         ("<tab>" . company-complete-selection))
-        (:map lsp-mode-map
-         ("<tab>" . company-indent-or-complete-common))
-  :custom
-  (company-minimum-prefix-length 1)
-  (company-idle-delay 0.0))
+      (use-package company
+      :after lsp-mode
+      :hook (lsp-mode . company-mode)
+      :bind (:map company-active-map
+             ("<tab>" . company-complete-selection))
+            (:map lsp-mode-map
+             ("<tab>" . company-indent-or-complete-common))
+      :custom
+      (company-minimum-prefix-length 1)
+      (company-idle-delay 0.0))
 
-(use-package company-box
-  :hook (company-mode . company-box-mode))
+    (use-package company-box
+      :hook (company-mode . company-box-mode))
 #+end_src
 
 ** Transparency Effect
@@ -671,7 +675,9 @@ You can use my emacs config.
           ;; move this one to top
           (set-window-buffer other-win buf-this-buf)
           (select-window other-win))))
+#+end_src
 
+#+begin_src elisp
     ;;;###autoload
     (defun buf-move-down ()
     "Swap the current buffer and the buffer under the split.
@@ -688,7 +694,9 @@ You can use my emacs config.
           ;; move this one to top
           (set-window-buffer other-win buf-this-buf)
           (select-window other-win))))
+#+end_src
 
+#+begin_src elisp
     ;;;###autoload
     (defun buf-move-left ()
     "Swap the current buffer and the buffer on the left of the split.
@@ -704,7 +712,9 @@ You can use my emacs config.
           ;; move this one to top
           (set-window-buffer other-win buf-this-buf)
           (select-window other-win))))
+#+end_src
 
+#+begin_src elisp
     ;;;###autoload
     (defun buf-move-right ()
     "Swap the current buffer and the buffer on the right of the split.
@@ -724,18 +734,19 @@ You can use my emacs config.
 
 ** Function for kill all buffer
 #+begin_src elisp
-        (defun nuke-all-buffers ()
-          (interactive)
-          (mapcar 'kill-buffer (buffer-list))
-          (delete-other-windows)
-          (dashboard-open))
+    (defun nuke-all-buffers ()
+      (interactive)
+      (mapcar 'kill-buffer (buffer-list))
+      (delete-other-windows)
+      (setq default-directory "~/")
+      (dashboard-open))
 
-        (global-set-key (kbd "C-x K") 'nuke-all-buffers)
+    (global-set-key (kbd "C-x K") 'nuke-all-buffers)
 #+end_src
 
 ** Magin & Evil Magit for manage git
 #+begin_src elisp
-(use-package magit
-  :custom
-  (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
+    (use-package magit
+      :custom
+      (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
 #+end_src
