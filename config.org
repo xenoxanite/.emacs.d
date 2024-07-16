@@ -753,5 +753,6 @@ You can use my emacs config.
 
 #+begin_src elisp
     (use-package org-modern)
+    (add-hook 'org-mode-hook #'org-modern-mode)
     (setq org-modern-star nil)
 #+end_src
