@@ -274,7 +274,7 @@ You can use my emacs config.
       (start/leader-keys
         "d" '(:ignore t :wk "Dired")
         "d f" '(counsel-find-file :wk "Open dired")
-        "d j" '(counsel-dired-jump :wk "Dired jump to current"))
+        "d j" '(dired-jump :wk "Dired jump to current"))
 #+end_src
 
 #+begin_src elisp
@@ -556,26 +556,32 @@ You can use my emacs config.
              (before-save . lsp-organize-imports)
              (prog-mode . lsp)
              (rust-mode . lsp)
+             (c-mode . lsp)
+             (cpp-mode . lsp)
              (svelte-mode . lsp)
              (typescript-mode . lsp)
              (lsp-mode . lsp-enable-which-key-integration))
       :commands lsp)
+    (use-package lsp-treemacs :ensure t)
+    (add-hook 'c-mode-hook 'lsp)
+    (add-hook 'c++-mode-hook 'lsp)
+    (add-hook 'cpp-mode-hook 'lsp)
 #+end_src
 
 ** Lsp
 #+begin_src elisp
-(use-package rust-mode
-  :mode ("\\.rs\\'" . rust-mode))
+    (use-package rust-mode
+      :mode ("\\.rs\\'" . rust-mode))
 
-(use-package svelte-mode
-  :mode ("\\.svelte\\'" . svelte-mode))
+    (use-package svelte-mode
+      :mode ("\\.svelte\\'" . svelte-mode))
 
-(use-package lsp-tailwindcss
-  :init
-  (setq lsp-tailwindcss-add-on-mode t))
+    (use-package lsp-tailwindcss
+      :init
+      (setq lsp-tailwindcss-add-on-mode t))
 
-(use-package typescript-mode
-  :mode ("\\.tsx?\\'" . typescript-mode))
+    (use-package typescript-mode
+      :mode ("\\.tsx?\\'" . typescript-mode))
 #+end_src
 
 ** Install & setup lsp-ui
@@ -754,5 +760,6 @@ You can use my emacs config.
 #+begin_src elisp
     (use-package org-modern)
     (add-hook 'org-mode-hook #'org-modern-mode)
+    (setq org-modern-block-fringe nil)
     (setq org-modern-star nil)
 #+end_src
